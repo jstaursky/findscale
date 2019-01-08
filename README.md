@@ -5,5 +5,10 @@ Simple gtk-based application that will display any musical scale in any key on i
 ![piano](./imgs/piano.png ) 
 
 
-- 
--
+- using gtk + cairo
+
+## TODO's ##
+
+- finish scale overlaying by note.
+- implement method for inputting a custom scale.
+
