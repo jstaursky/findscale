@@ -1,5 +1,5 @@
-#ifndef NODEMODULE_H
-#define NODEMODULE_H
+#ifndef LIST_H
+#define LIST_H
 
 /* ***TODO***
  *
@@ -183,4 +183,4 @@ List_traverse(node_t *node,
     return OK;
 }
 
-#endif /* NODEMODULE_H */
+#endif /* LIST_H */

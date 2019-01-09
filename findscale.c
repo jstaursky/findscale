@@ -8,12 +8,15 @@ struct data {
                                  * cairo_surface_t* elements */
 };
 
-/* Redraw the screen from the surface. Note that the ::draw
-* signal receives a ready-to-be-used cairo_t that is already
-* clipped to only draw the exposed areas of the widget
-*/
-static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr,
-                              gpointer user_data)
+/*
+ * Redraw the screen from the surface. Note that the ::draw
+ * signal receives a ready-to-be-used cairo_t that is already
+ * clipped to only draw the exposed areas of the widget
+ */
+static gboolean
+on_draw_event(GtkWidget *widget,
+              cairo_t *cr,
+              gpointer user_data)
 {
     struct data *temp = user_data;
     cairo_set_source_surface(cr, temp->piano, 0, 0);
@@ -30,7 +33,9 @@ static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr,
     return FALSE;
 }
 
-int main(int argc, char *argv[])
+int
+main(int   argc,
+     char *argv[])
 {
     /* Create window, set position, title, etc. */
     gtk_init(&argc, &argv);
