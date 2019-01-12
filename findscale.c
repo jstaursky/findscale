@@ -1,7 +1,6 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 
-
 struct data {
     cairo_surface_t *piano;
     cairo_surface_t *notes;     /* TODO: Turn this into linked list of
@@ -49,8 +48,8 @@ main(int   argc,
 
     struct data image;
 
-    image.piano = cairo_image_surface_create_from_png("piano.png");
-    image.notes = cairo_image_surface_create_from_png("piano-A-notes.png");
+    image.piano = cairo_image_surface_create_from_png("imgs/piano.png");
+    image.notes = cairo_image_surface_create_from_png("imgs/piano-A-notes.png");
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
                      G_CALLBACK(on_draw_event), (gpointer)&image);
