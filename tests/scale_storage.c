@@ -50,8 +50,12 @@ fgetLine(FILE *stream)
         return NULL;
     }
     char *ptr = buffer;
-    for (; (*ptr = fgetc(stream)) != EOF && *ptr != '\n'; ++ptr) {
-
+    int c;                      /* fgetc returns int. Comparing EOF w/ char may
+                                 * cause issues. */
+    while ( (c = fgetc(stream)) != EOF &&
+            (*ptr = c) != '\n')
+    {
+        ++ptr;
         size_t offset = ptr - buffer;
         if (offset >= max) {
             max += chunk;
