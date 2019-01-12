@@ -6,4 +6,4 @@ INCLUDES := ./include/
 findscale: src/findscale.c src/List.c			# default goal
 	gcc $(CFLAGS) -I$(INCLUDES) \
 		$(SRC)/findscale.c $(SRC)/List.c  \
-		$(LIBS) -o findscale
+		$(LIBS) -o $(SRC)/findscale
