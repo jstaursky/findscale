@@ -1,8 +1,8 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 /* Local Library(s) */
 #include "List.h"
-#include <errno.h>
 /* ***TODO***
  *
  * - Need to add a "destructor" to free memory on heap utilized by
