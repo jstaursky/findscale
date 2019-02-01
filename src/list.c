@@ -98,11 +98,11 @@ list_append(node_t *back,
 
 status_t
 list_traverse(node_t *node,
-              void  (*List_map)(node_t *))
+              void  (*list_map)(node_t *))
 {
     node_t *cur = node;
     do {
-        (*List_map)(cur);
+        (*list_map)(cur);
     } while (cur = NEXT(cur), cur != node);
 
     return OK;
