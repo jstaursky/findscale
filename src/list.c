@@ -6,14 +6,14 @@
 /* ***TODO***
  *
  * - Need to add a "destructor" to free memory on heap utilized by
- *   List_createnode and List_prepend.
+ *   list_createnode and list_prepend.
  */
 
 //  --------------------------------------------------------------------------
 //  Create very first node of an eventual linked list.
 
 node_t*
-List_createnode(void *Data)
+list_createnode(void *Data)
 {
     node_t *node_new = (node_t *)malloc(sizeof(node_t));
     if (!node_new) {
@@ -34,13 +34,13 @@ List_createnode(void *Data)
 //  Inserts a node before "next" node and stores "data" in it.
 
 status_t
-List_prepend(node_t *next,
+list_prepend(node_t *next,
              void   *data)
 {
     if (!next)
         return ERROR;
 
-    node_t *node_new = List_createnode(data);
+    node_t *node_new = list_createnode(data);
     if (!node_new) {
         perror("Unable to allocate node_t.");
         return ERROR;
@@ -69,13 +69,13 @@ List_prepend(node_t *next,
 //  Append a node after the "back" node, initialize with "data".
 
 status_t
-List_append(node_t *back,
+list_append(node_t *back,
             void   *data)
 {
     if (!back)
         return ERROR;
 
-    node_t *node_new = List_createnode(data);
+    node_t *node_new = list_createnode(data);
     if (!node_new) {
         perror("Unable to allocate node_t.");
         return ERROR;
@@ -97,12 +97,12 @@ List_append(node_t *back,
 }
 
 status_t
-List_traverse(node_t *node,
-              void  (*List_map)(node_t *))
+list_traverse(node_t *node,
+              void  (*list_map)(node_t *))
 {
     node_t *cur = node;
     do {
-        (*List_map)(cur);
+        (*list_map)(cur);
     } while (cur = NEXT(cur), cur != node);
 
     return OK;
