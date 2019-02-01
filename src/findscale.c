@@ -1,11 +1,13 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
+#include <string.h>
 
-struct data {
-    cairo_surface_t *piano;
-    cairo_surface_t *notes;     /* TODO: Turn this into linked list of
-                                 * cairo_surface_t* elements */
+struct imagelayers {
+    cairo_surface_t *instrument;
+    cairo_surface_t *notes[12];
 };
+
+enum {Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G};
 
 /*
  * Redraw the screen from the surface. Note that the ::draw
@@ -17,20 +19,51 @@ on_draw_event(GtkWidget *widget,
               cairo_t *cr,
               gpointer user_data)
 {
-    struct data *temp = user_data;
-    cairo_set_source_surface(cr, temp->piano, 0, 0);
+    struct imagelayers *temp = user_data;
+    cairo_set_source_surface(cr, temp->instrument, 0, 0);
 
     cairo_paint(cr);
     cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_mask_surface(cr, temp->notes, 0, 0);
+    cairo_mask_surface(cr, temp->notes[A], 0, 0);
     cairo_fill(cr);
 
     gtk_widget_set_size_request(widget,
-                                cairo_image_surface_get_width(temp->piano),
-                                cairo_image_surface_get_height(temp->piano));
+                                cairo_image_surface_get_width(temp->instrument),
+                                cairo_image_surface_get_height(temp->instrument));
 
     return FALSE;
 }
+
+
+struct imagelayers*
+getinstrumentlayers(char *instru_choice)
+{
+    char* chromaticscale[] = {"Ab","A","Bb","B","C","Db","D","Eb","E","F","Gb","G"};
+
+    struct imagelayers* images =
+            (struct imagelayers*)malloc(sizeof(struct imagelayers));
+
+    char *instru_loc = (char*)malloc(
+            sizeof(char) *
+            (strlen("imgs/") + strlen(instru_choice) + strlen(".png")));
+    sprintf(instru_loc, "imgs/%s.png", instru_choice);
+    images->instrument = cairo_image_surface_create_from_png(instru_loc);
+
+    for (int note = 0; note < 12; ++note) {
+        char *note_loc = (char*)malloc(
+            sizeof(char) *
+            (strlen("imgs/") + strlen(instru_choice) + strlen("-")
+             + strlen(chromaticscale[note]) + strlen("-notes.png")) + 1);
+
+        sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice, chromaticscale[note]);
+        images->notes[note] =
+            cairo_image_surface_create_from_png(note_loc);
+    }
+
+    return images;
+
+}
+
 
 int
 main(int   argc,
@@ -46,13 +79,16 @@ main(int   argc,
     GtkWidget *draw_area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), draw_area);
 
-    struct data image;
+    /* Must provide instrument of choice as cmdline argument. */
+    struct imagelayers* images = getinstrumentlayers(argv[1]);
 
-    image.piano = cairo_image_surface_create_from_png("imgs/piano.png");
-    image.notes = cairo_image_surface_create_from_png("imgs/piano-A-notes.png");
+    /* image.instrument = */
+    /*     cairo_image_surface_create_from_png(instru_loc); */
+
+    /* image.notes = cairo_image_surface_create_from_png("imgs/piano-A-notes.png"); */
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
-                     G_CALLBACK(on_draw_event), (gpointer)&image);
+                     G_CALLBACK(on_draw_event), (gpointer)images);
 
 
     /* --------------------------------------------------------------------- */

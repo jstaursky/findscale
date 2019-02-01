@@ -45,7 +45,7 @@ List_createnode(void *Data);
  *
  */
 status_t
-List_prepend(node_t *next, void   *data);
+List_prepend(node_t *next, void *data);
 
 /**
  *
@@ -53,8 +53,8 @@ List_prepend(node_t *next, void   *data);
  *
  * List_append:
  *
- *    List_append will insert a new node after another node listed as an argument
- *    as well as store data in the new node.
+ *    List_append will insert a new node after another node listed as an
+ *    argument as well as store data in the new node.
  *
  * Parameters   : back -- A pointer to the node being appended to.
  *                data -- data to be attached to inserted node.
@@ -69,7 +69,7 @@ List_prepend(node_t *next, void   *data);
  *
  */
 status_t
-List_append(node_t *back, void   *data);
+List_append(node_t *back, void *data);
 
 /**
  *
@@ -96,6 +96,6 @@ List_append(node_t *back, void   *data);
  *
  */
 status_t
-List_traverse(node_t *node, void  (*List_map)(node_t *));
+List_traverse(node_t *headnode, void (*List_map)(node_t *));
 
 #endif /* LIST_H */
