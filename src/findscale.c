@@ -19,13 +19,18 @@ on_draw_event(GtkWidget *widget,
               cairo_t *cr,
               gpointer user_data)
 {
-    struct imagelayers *temp = user_data;
-    cairo_set_source_surface(cr, temp->instrument, 0, 0);
+    /* cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE); */
 
+    struct imagelayers *temp = user_data;
+
+    cairo_set_source_surface(cr, temp->instrument, 0, 0);
     cairo_paint(cr);
-    cairo_set_source_rgb(cr, 0, 0, 0);
-    cairo_mask_surface(cr, temp->notes[A], 0, 0);
-    cairo_fill(cr);
+
+    cairo_set_source_surface(cr, temp->notes[A], 0, 0);
+    cairo_paint(cr);
+
+    cairo_set_source_surface(cr, temp->notes[B], 0, 0);
+    cairo_paint(cr);
 
     gtk_widget_set_size_request(widget,
                                 cairo_image_surface_get_width(temp->instrument),
