@@ -7,6 +7,11 @@ struct imagelayers {
     cairo_surface_t *notes[12];
 };
 
+typedef struct scale_t {
+    char *name;
+    char *intervals;
+} scale_t;
+
 enum {Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G};
 
 /*
@@ -19,8 +24,6 @@ on_draw_event(GtkWidget *widget,
               cairo_t *cr,
               gpointer user_data)
 {
-    /* cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE); */
-
     struct imagelayers *temp = user_data;
 
     cairo_set_source_surface(cr, temp->instrument, 0, 0);
@@ -48,6 +51,7 @@ getinstrumentlayers(char *instru_choice)
     struct imagelayers* images =
             (struct imagelayers*)malloc(sizeof(struct imagelayers));
 
+    // instrument image layer located in imgs/<instrument>.png
     char *instru_loc = (char*)malloc(
             sizeof(char) *
             (strlen("imgs/") + strlen(instru_choice) + strlen(".png")));
@@ -64,17 +68,57 @@ getinstrumentlayers(char *instru_choice)
         images->notes[note] =
             cairo_image_surface_create_from_png(note_loc);
     }
-
     return images;
-
 }
+
+
+char*
+fgetline(FILE *stream)
+{
+    const size_t chunk = 128;
+    size_t max = chunk;
+
+    /* Preliminary check */
+    if (!stream || feof(stream))
+        return NULL;
+
+    char *buffer = (char *)malloc(chunk * sizeof(char));
+    if (!buffer) {
+        perror("Unable to allocate space");
+        return NULL;
+    }
+    char *ptr = buffer;
+    int c;                      /* fgetc returns int. Comparing EOF w/ char may
+                                 * cause issues. */
+    while ( (c = fgetc(stream)) != EOF &&
+            (*ptr = c) != '\n')
+    {
+        ++ptr;
+        size_t offset = ptr - buffer;
+        if (offset >= max) {
+            max += chunk;
+
+            char *tmp = realloc(buffer, max);
+            if (!tmp) {
+                free(buffer);
+                return NULL;
+            }
+            buffer = tmp;
+            ptr = tmp + offset;
+        }
+    }
+    *ptr = '\0';
+    return buffer;
+}
+
+
 
 
 int
 main(int   argc,
      char *argv[])
 {
-    /* Create window, set position, title, etc. */
+    // Create window, set position, title, etc.
     gtk_init(&argc, &argv);
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position     (GTK_WINDOW(window), GTK_WIN_POS_CENTER);
@@ -84,17 +128,27 @@ main(int   argc,
     GtkWidget *draw_area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), draw_area);
 
-    /* Must provide instrument of choice as cmdline argument. */
+    // Must provide instrument of choice as cmdline argument.
     struct imagelayers* images = getinstrumentlayers(argv[1]);
 
-    /* image.instrument = */
-    /*     cairo_image_surface_create_from_png(instru_loc); */
+    // Import list of scales.
+    FILE *configfp = fopen("conf/scale.list", "r");
+    // Create initial node of scale listing.
+    node_t *listhead = list_createnode(NULL);
 
-    /* image.notes = cairo_image_surface_create_from_png("imgs/piano-A-notes.png"); */
+    for (char *line; line = fgetline(configfp);) {
+        scale_t *scale = malloc(sizeof(scale_t));
+
+        scale->name = strtok(line, ",\t");
+        scale->intervals = strtok(NULL, ",\040\t");
+
+        list_prepend(listhead, scale);
+    }
+
+
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
                      G_CALLBACK(on_draw_event), (gpointer)images);
-
 
     /* --------------------------------------------------------------------- */
     gtk_widget_show_all(window);

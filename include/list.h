@@ -22,15 +22,15 @@ typedef struct node_t {
  * linked list.
  */
 node_t*
-List_createnode(void *Data);
+list_createnode(void *Data);
 
 /**
  *
- * status_t List_prepend(node_t *next, void *data)
+ * status_t list_prepend(node_t *next, void *data)
  *
- * List_prepend:
+ * list_prepend:
  *
- *    List_prepend will insert a new node before another node listed as an
+ *    list_prepend will insert a new node before another node listed as an
  *    argument as well as store data in the new node.
  *
  * Parameters   : next -- A pointer to the node being prepended to.
@@ -45,15 +45,15 @@ List_createnode(void *Data);
  *
  */
 status_t
-List_prepend(node_t *next, void *data);
+list_prepend(node_t *next, void *data);
 
 /**
  *
- * status_t List_append(node_t *back, void *data)
+ * status_t list_append(node_t *back, void *data)
  *
- * List_append:
+ * list_append:
  *
- *    List_append will insert a new node after another node listed as an
+ *    list_append will insert a new node after another node listed as an
  *    argument as well as store data in the new node.
  *
  * Parameters   : back -- A pointer to the node being appended to.
@@ -69,15 +69,15 @@ List_prepend(node_t *next, void *data);
  *
  */
 status_t
-List_append(node_t *back, void *data);
+list_append(node_t *back, void *data);
 
 /**
  *
- * status_t List_traverse(node_t *node, void (*List_map)(node_t *)
+ * status_t list_traverse(node_t *node, void (*List_map)(node_t *)
  *
- * List_traverse:
+ * list_traverse:
  *
- *    List_traverse applies the map provided by the function pointer List_map.
+ *    list_traverse applies the map provided by the function pointer List_map.
  *
  * Parameters   : node     -- Arbitrary node in list used as a starting and end
  *                            point.
@@ -96,6 +96,6 @@ List_append(node_t *back, void *data);
  *
  */
 status_t
-List_traverse(node_t *headnode, void (*List_map)(node_t *));
+list_traverse(node_t *headnode, void (*List_map)(node_t *));
 
 #endif /* LIST_H */
