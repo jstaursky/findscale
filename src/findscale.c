@@ -49,10 +49,10 @@ on_draw_event(GtkWidget *widget,
 
 
 struct imagelayers*
-getinstrumentlayers(char *instru_choice)
+getinstrumentlayers(char *instru_choice, char **interval)
 {
 	char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
-				  "D",  "Eb", "E",  "F", "Gb", "G"};
+                              "D",  "Eb", "E",  "F", "Gb", "G"};
 
 	struct imagelayers *images = malloc(sizeof(struct imagelayers));
 
@@ -120,8 +120,6 @@ fgetline(FILE *stream)
 }
 
 
-
-
 int
 main(int   argc,
      char *argv[])
@@ -136,8 +134,6 @@ main(int   argc,
     GtkWidget *draw_area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), draw_area);
 
-    // Must provide instrument of choice as cmdline argument.
-    struct imagelayers* images = getinstrumentlayers(argv[1]);
 
     // Import list of scales.
     FILE *configfp = fopen("conf/scale.list", "r");
@@ -155,31 +151,26 @@ main(int   argc,
     // Import complete, access scales through listhead;
 
     node_t *cur = NEXT(listhead);
-    char **root = malloc(sizeof(char*));
-    char **tmp = root;
-    *tmp = strtok(SCALE(cur), "-");
-    tmp += strlen(*tmp);
-    int i = 1;
-    while (realloc(root, sizeof(char*) * ++i),
-           *tmp = strtok(NULL, "-"))
-    {
-        tmp += strlen(*tmp);
+
+    char **root        = malloc(sizeof(char*) * 12); /* TODO make this dynamic adjustment instead of 12,
+                                                      * remember realloc may move ptr. */
+    char *rootinterval = strtok(SCALE(cur), "-");
+
+    root[0] = malloc(strlen(rootinterval) + 1);
+    strcpy(root[0], rootinterval);
+
+    char *tmp;
+    for (int i = 1; tmp = strtok(NULL, "-"); ++i) {
+        root[i] = malloc(sizeof(char) * strlen(tmp) + 1);
+        strcpy(root[i], tmp);
     }
 
-    puts(*root);
-    /* const int max_len = 12; */
-    /* int scale[max_len]; */
-    /* scale[0] = atoi(strtok((*((scale_t*)DATA(cur))).intervals, "-")); */
-    /* int cnt = 1; */
-    /* while (cnt != 12) */
-    /*     scale[cnt++] = atoi(strtok(NULL, "-")); */
-
-    /* printf("%d\n",scale[0]); */
+    // Must provide instrument of choice as cmdline argument.
+    struct imagelayers* images = getinstrumentlayers(argv[1], root);
 
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
                      G_CALLBACK(on_draw_event), (gpointer)images);
-
     /* --------------------------------------------------------------------- */
     gtk_widget_show_all(window);
     gtk_main();
