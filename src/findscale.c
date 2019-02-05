@@ -11,7 +11,7 @@ struct imagelayers {
 
 typedef struct scale_t {
     char *name;
-    char *intervals;
+    node_t *intervals;
 } scale_t;
 
 #define SCALE_NAME(node) (*((scale_t *)DATA(node))).name
@@ -34,11 +34,11 @@ on_draw_event(GtkWidget *widget,
     cairo_set_source_surface(cr, temp->instrument, 0, 0);
     cairo_paint(cr);
 
-    cairo_set_source_surface(cr, temp->notes[A], 0, 0);
-    cairo_paint(cr);
+    /* cairo_set_source_surface(cr, temp->notes[A], 0, 0); */
+    /* cairo_paint(cr); */
 
-    cairo_set_source_surface(cr, temp->notes[B], 0, 0);
-    cairo_paint(cr);
+    /* cairo_set_source_surface(cr, temp->notes[B], 0, 0); */
+    /* cairo_paint(cr); */
 
     gtk_widget_set_size_request(widget,
                                 cairo_image_surface_get_width(temp->instrument),
@@ -49,7 +49,7 @@ on_draw_event(GtkWidget *widget,
 
 
 struct imagelayers*
-getinstrumentlayers(char *instru_choice, char **interval)
+getinstrumentlayers(char *instru_choice)
 {
 	char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
                               "D",  "Eb", "E",  "F", "Gb", "G"};
@@ -64,19 +64,19 @@ getinstrumentlayers(char *instru_choice, char **interval)
 	sprintf(instru_loc, "imgs/%s.png", instru_choice);
 	images->instrument = cairo_image_surface_create_from_png(instru_loc);
 
-	for (int note = 0; note < 12; ++note) {
-		char *note_loc = malloc(
-			sizeof(char)
-				* (strlen("imgs/") + strlen(instru_choice)
-				   + strlen("-") + strlen(chromaticscale[note])
-				   + strlen("-notes.png"))
-			+ 1);
+	/* for (int note = 0; note < 12; ++note) { */
+	/* 	char *note_loc = malloc( */
+	/* 		sizeof(char) */
+	/* 			* (strlen("imgs/") + strlen(instru_choice) */
+	/* 			   + strlen("-") + strlen(chromaticscale[note]) */
+	/* 			   + strlen("-notes.png")) */
+	/* 		+ 1); */
 
-		sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice,
-			chromaticscale[note]);
-		images->notes[note] =
-			cairo_image_surface_create_from_png(note_loc);
-	}
+	/* 	sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice, */
+	/* 		chromaticscale[note]); */
+	/* 	images->notes[note] = */
+	/* 		cairo_image_surface_create_from_png(note_loc); */
+	/* } */
 	return images;
 }
 
@@ -119,6 +119,12 @@ fgetline(FILE *stream)
     return buffer;
 }
 
+/* char ** */
+/* parseintervals(node_t *node) */
+/* { */
+
+/* } */
+
 
 int
 main(int   argc,
@@ -138,35 +144,43 @@ main(int   argc,
     // Import list of scales.
     FILE *configfp = fopen("conf/scale.list", "r");
     // Create initial node of scale listing.
-    node_t *listhead = list_createnode(NULL);
+    node_t *scalelist_h = list_createnode(NULL);
 
     for (char *line; line = fgetline(configfp);) {
-        scale_t *scale = malloc(sizeof(scale_t));
+        scale_t *scale   = malloc(sizeof(scale_t));
+        scale->intervals = list_createnode(NULL);
+        scale->name      = strtok(line, ",\t");
+        char    *temp    = strtok(NULL, ",\040\t");
 
-        scale->name = strtok(line, ",\t");
-        scale->intervals = strtok(NULL, ",\040\t");
+        char *noteinterval = strtok(temp, "-");
+        while(noteinterval != NULL) {
+            char *note = malloc(sizeof(char) * 3);
+            strcpy(note, noteinterval);
+            if (!DATA(scale->intervals)) {
+                DATA(scale->intervals) = note;
+            } else {
+                list_prepend(scale->intervals, note);
+            }
+            noteinterval = strtok(NULL, "-");
+        }
 
-        list_prepend(listhead, scale);
+        if (!DATA(scalelist_h)) {
+            DATA(scalelist_h) = scale;
+        } else {
+            list_prepend(scalelist_h, scale);
+        }
+
     }
-    // Import complete, access scales through listhead;
+    // Import complete, access scales through scalelist_h;
+    node_t *tmp = SCALE(scalelist_h);
 
-    node_t *cur = NEXT(listhead);
-
-    char **root        = malloc(sizeof(char*) * 12); /* TODO make this dynamic adjustment instead of 12,
-                                                      * remember realloc may move ptr. */
-    char *rootinterval = strtok(SCALE(cur), "-");
-
-    root[0] = malloc(strlen(rootinterval) + 1);
-    strcpy(root[0], rootinterval);
-
-    char *tmp;
-    for (int i = 1; tmp = strtok(NULL, "-"); ++i) {
-        root[i] = malloc(sizeof(char) * strlen(tmp) + 1);
-        strcpy(root[i], tmp);
+    while ((tmp = NEXT(tmp)) != SCALE(scalelist_h)) {
+        puts(DATA(tmp));
     }
+
 
     // Must provide instrument of choice as cmdline argument.
-    struct imagelayers* images = getinstrumentlayers(argv[1], root);
+    struct imagelayers* images = getinstrumentlayers(argv[1]);
 
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
