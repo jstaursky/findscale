@@ -17,6 +17,7 @@ typedef struct scale_t {
 #define SCALE_NAME(node) (*((scale_t *)DATA(node))).name
 #define SCALE(node) (*((scale_t *)DATA(node))).intervals
 
+
 enum {Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G};
 
 /*
@@ -34,8 +35,10 @@ on_draw_event(GtkWidget *widget,
     cairo_set_source_surface(cr, temp->instrument, 0, 0);
     cairo_paint(cr);
 
-    /* cairo_set_source_surface(cr, temp->notes[A], 0, 0); */
-    /* cairo_paint(cr); */
+   for (int i = 0; i < 8; ++i) {
+       cairo_set_source_surface(cr, temp->notes[i], 0, 0);
+       cairo_paint(cr);
+   }
 
     /* cairo_set_source_surface(cr, temp->notes[B], 0, 0); */
     /* cairo_paint(cr); */
@@ -49,10 +52,11 @@ on_draw_event(GtkWidget *widget,
 
 
 struct imagelayers*
-getinstrumentlayers(char *instru_choice)
+getinstrumentlayers(char *instru_choice, int key, node_t *intervals)
 {
 	char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
                               "D",  "Eb", "E",  "F", "Gb", "G"};
+
 
 	struct imagelayers *images = malloc(sizeof(struct imagelayers));
 
@@ -63,14 +67,29 @@ getinstrumentlayers(char *instru_choice)
 
 	sprintf(instru_loc, "imgs/%s.png", instru_choice);
 	images->instrument = cairo_image_surface_create_from_png(instru_loc);
+    int i = 0;
+    node_t *tmp = intervals;
+    while ((tmp = NEXT(tmp)) != intervals) {
+        int note = key + atoi(DATA(tmp));
+        if (note > 12) {
+            note -= 12;
+        }
+        	char *note_loc = malloc(
+        		sizeof(char)
+        			* (strlen("imgs/") + strlen(instru_choice)
+        			   + strlen("-") + strlen(chromaticscale[note])
+        			   + strlen("-notes.png"))
+        		+ 1);
 
-	/* for (int note = 0; note < 12; ++note) { */
-	/* 	char *note_loc = malloc( */
-	/* 		sizeof(char) */
-	/* 			* (strlen("imgs/") + strlen(instru_choice) */
-	/* 			   + strlen("-") + strlen(chromaticscale[note]) */
-	/* 			   + strlen("-notes.png")) */
-	/* 		+ 1); */
+            sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice,
+            		chromaticscale[note]);
+
+            images->notes[i] =
+                cairo_image_surface_create_from_png(note_loc);
+            ++i;
+            puts(note_loc);
+    }
+
 
 	/* 	sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice, */
 	/* 		chromaticscale[note]); */
@@ -150,10 +169,10 @@ main(int   argc,
         scale_t *scale   = malloc(sizeof(scale_t));
         scale->intervals = list_createnode(NULL);
         scale->name      = strtok(line, ",\t");
-        char    *temp    = strtok(NULL, ",\040\t");
 
-        char *noteinterval = strtok(temp, "-");
+        char *noteinterval = strtok(strtok(NULL, ",\040\t"), "-");
         while(noteinterval != NULL) {
+            // Two digits + null is maximum string size
             char *note = malloc(sizeof(char) * 3);
             strcpy(note, noteinterval);
             if (!DATA(scale->intervals)) {
@@ -173,14 +192,15 @@ main(int   argc,
     }
     // Import complete, access scales through scalelist_h;
     node_t *tmp = SCALE(scalelist_h);
-
+    int count = 1;              // count stores the number of notes in scale.
     while ((tmp = NEXT(tmp)) != SCALE(scalelist_h)) {
+        count++;
         puts(DATA(tmp));
     }
 
 
     // Must provide instrument of choice as cmdline argument.
-    struct imagelayers* images = getinstrumentlayers(argv[1]);
+    struct imagelayers* images = getinstrumentlayers(argv[1], C, SCALE(scalelist_h));
 
 
     g_signal_connect(G_OBJECT(draw_area), "draw",
