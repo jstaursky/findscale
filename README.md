@@ -9,6 +9,7 @@ Simple gtk-based application that will display any musical scale in any key on i
 
 ## TODO's ##
 
-- finish scale overlaying by note.
-- implement method for inputting a custom scale.
+- finish scale overlaying by note. (mostly just need to finish overlays for black keys)
+- implement method for inputting a custom scale.**DONE** (pending branch merge)
+
 

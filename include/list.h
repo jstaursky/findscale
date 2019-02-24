@@ -1,4 +1,4 @@
-/* List interface */
+/* list interface */
 #ifndef LIST_H
 #define LIST_H
 
@@ -7,7 +7,6 @@
 #define BACK(L) ((L)->back)
 
 typedef enum { OK,    ERROR } status_t;
-typedef enum { FALSE, TRUE  } bool;
 
 typedef struct node_t {
     void          *data;
