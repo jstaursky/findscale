@@ -86,7 +86,7 @@ main(int argc, char *argv[])
 
 	// Must provide instrument of choice as cmdline argument.
 	struct imagelayers *images =
-		getinstrumentlayers(argv[1], C, SCALE(scalelist_h));
+		getinstrumentlayers(argv[1], D, SCALE(scalelist_h));
 
 	g_signal_connect(G_OBJECT(draw_area), "draw", G_CALLBACK(on_draw_event),
 			 (gpointer)images);
