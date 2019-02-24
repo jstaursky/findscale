@@ -163,7 +163,7 @@ getinstrumentlayers(char   *instru_choice,
 	node_t *tmp = intervals;
 	while ((tmp = NEXT(tmp)) != intervals) {
 		int note = key + atoi(DATA(tmp));
-		if (note > 12) {
+		if (note >= 12) {
 			note -= 12;
 		}
 		char *note_loc = malloc(
