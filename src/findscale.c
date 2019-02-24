@@ -44,7 +44,7 @@ main(int argc, char *argv[])
 	GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 300, 220);
-	gtk_window_set_title(GTK_WINDOW(window), "Title");
+	gtk_window_set_title(GTK_WINDOW(window), "Findscale");
 	/* ------------------------------------------------------------------ */
 	GtkWidget *draw_area = gtk_drawing_area_new();
 	gtk_container_add(GTK_CONTAINER(window), draw_area);
