@@ -24,7 +24,7 @@ Currently must run the program as follows
 ```
 ./findscale piano <Key>
 ```
-so for example, running `./findscale piano Ab` will result in, *Ab-major-scale*
+so for example, running `./findscale piano Ab` will result in,
 
 ![Ab-major-scale](./examples/Ab-major-scale.png)
 
