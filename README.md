@@ -4,7 +4,6 @@ Simple gtk-based application that will display any musical scale in any key on i
 
 ![piano](./src/imgs/piano.png ) 
 
-
 - using gtk + cairo
 
 ## To do's ##
@@ -24,11 +23,11 @@ Currently must run the program as follows
 ```
 ./findscale piano <Key>
 ```
-so for example, running `./findscale piano Ab` will result in,
+For example, running `./findscale piano Ab` will result in,
 
 ![Ab-major-scale](./examples/Ab-major-scale.png)
 
-__findscale__ will only display the 1st scale listed in the config file found at `findscale/src/conf/scale.list` (selectable scale widget to be added later). So for example since the scale interval pattern corresponding to the major scale is listed first in `scale.list` that is the scale displayed above for the key `Ab`.
+__findscale__ will only display the 1st scale listed in the config file found at `findscale/src/conf/scale.list` (selectable scale widget to be added later). So, here we have the major scale in the key of A flat since the scale interval pattern corresponding to the major scale is listed first in `scale.list` and our cmdline argument for the key was `Ab`.
 
 It should also be noted that the `<Key>` passed as an argument to findscale can only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
 
