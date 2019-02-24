@@ -17,6 +17,9 @@ typedef struct scale_t {
 #define SCALE_NAME(node) (*((scale_t *)DATA(node))).name
 #define SCALE(node) (*((scale_t *)DATA(node))).intervals
 
+char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
+                          "D",  "Eb", "E",  "F", "Gb", "G"};
+
 enum { Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G };
 
 char*
@@ -78,15 +81,20 @@ main(int argc, char *argv[])
 	// Import complete, access scales through scalelist_h;
 
 	node_t *tmp = SCALE(scalelist_h);
-	int count = 1;          // count the number of notes in scale.
-	while ((tmp = NEXT(tmp)) != SCALE(scalelist_h)) {
-		count++;
+	int count = 0;          // count the number of notes in scale.
+	while (++count, (tmp = NEXT(tmp)) != SCALE(scalelist_h)) {
                 puts(DATA(tmp));
 	}
 
+
+        int k = 0;
+        while (strcmp(argv[2], chromaticscale[k]) != 0) {
+                ++k;
+        }
+
 	// Must provide instrument of choice as cmdline argument.
 	struct imagelayers *images =
-		getinstrumentlayers(argv[1], D, SCALE(scalelist_h));
+		getinstrumentlayers(argv[1], k, SCALE(scalelist_h));
 
 	g_signal_connect(G_OBJECT(draw_area), "draw", G_CALLBACK(on_draw_event),
 			 (gpointer)images);
@@ -140,8 +148,6 @@ getinstrumentlayers(char   *instru_choice,
                     int     key,
                     node_t *intervals)
 {
-	char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
-				  "D",  "Eb", "E",  "F", "Gb", "G"};
 
 	struct imagelayers *images = malloc(sizeof(struct imagelayers));
 
@@ -174,7 +180,7 @@ getinstrumentlayers(char   *instru_choice,
 			cairo_image_surface_create_from_png(note_loc);
                 ++cnt;
 	}
-        images->count = cnt + 1; // +1 to account for starting at 0.
+        images->count = cnt;
         printf("%d\n", cnt);
 	return images;
 }
