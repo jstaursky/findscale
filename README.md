@@ -7,7 +7,7 @@ Simple gtk-based application that will display any musical scale in any key on i
 
 - using gtk + cairo
 
-## ToDo's ##
+## To do's ##
 
 - ~~finish scale overlaying by note. (mostly just need to finish overlays for black keys)~~ **DONE**
 - ~~implement method for inputting a custom scale.~~ **DONE**
@@ -24,8 +24,11 @@ Currently must run the program as follows
 ```
 ./findscale piano <Key>
 ```
-so for example, running `./findscale piano Ab` will result in,
+so for example, running `./findscale piano Ab` will result in, *Ab-major-scale*
 
 ![Ab-major-scale](./examples/Ab-major-scale.png)
-*Ab-major-scale*
-Currently, findscale will only display the 1st scale listed in the config file found in `findscale/src/conf/scale.list`. It is the next item on the TODO list to implement a widget to change this so any scale listed in `scale.list` can be selected individually and the graphic will be updated accordingly.
+
+__findscale__ will only display the 1st scale listed in the config file found at `findscale/src/conf/scale.list`. So for example since the scale interval pattern corresponding to the major scale is listed first in `scale.list` that is the scale that is displayed above for the key `Ab`.
+
+It should also be noted that the `<Key>` passed as an argument to findscale can only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
+
