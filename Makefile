@@ -10,7 +10,7 @@ SRC		= ./src
 INCLUDES 	= ./include
 OBJDIR 		= ./lib
 OBJECTS 	= CircularLinkedList.o \
-			  Findscale.o
+			  findscale.o
 
 TARGET 		= findscale
 
