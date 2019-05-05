@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 	}
 
 	struct imagelayers_t *displaylayers =
-	    getimages(scaledatabase->entry[0], argv[1], argv[2]);
+		getimages(scaledatabase->entry[0], argv[1], argv[2]);
 
 	g_signal_connect(G_OBJECT(draw_area), "draw", *G_CALLBACK(on_draw_event),
 					 (gpointer)displaylayers);
@@ -100,8 +100,7 @@ struct database_t *build_database(FILE *fp)
 
 // getimages returns an array holding the images relating to contents found in
 // scale.
-struct imagelayers_t *getimages(struct scale_t *scale_p,
-                                char *instrument_name,
+struct imagelayers_t *getimages(struct scale_t *scale_p, char *instrument_name,
 								char *keysig)
 {
 	static char *chromaticscale[] = { "Ab", "A",  "Bb", "B", "C",  "Db",
@@ -116,20 +115,19 @@ struct imagelayers_t *getimages(struct scale_t *scale_p,
 	struct imagelayers_t *images = malloc(sizeof(struct imagelayers_t));
 
 	char *instru_loc =
-		malloc(sizeof(char) * (strlen("imgs/") + strlen(instrument_name) +
-							   strlen(".png")));
+		malloc(sizeof(char) *
+			   (strlen("imgs/") + strlen(instrument_name) + strlen(".png")));
 	sprintf(instru_loc, "imgs/%s.png", instrument_name);
 
 	images->instrument = cairo_image_surface_create_from_png(instru_loc);
-    cairo_surface_reference(images->instrument);
+	cairo_surface_reference(images->instrument);
 
 	int idx = 0;
 	struct node_t *scaleproxy = scale_p->scale;
 
 	do {
-        printf("%d <= idx value\n", idx);
 		int note = key + atoi(scaleproxy->data);
-        note %= 12;
+		note %= 12;
 		char *note_loc =
 			malloc(sizeof(char) * (strlen("imgs/") + strlen(instrument_name) +
 								   strlen("-") + strlen(chromaticscale[note]) +
@@ -140,12 +138,12 @@ struct imagelayers_t *getimages(struct scale_t *scale_p,
 				chromaticscale[note]);
 
 		images->notes[idx] = cairo_image_surface_create_from_png(note_loc);
-        cairo_surface_reference(images->notes[idx]);
+		cairo_surface_reference(images->notes[idx]);
 
 		++idx;
 	} while ((scaleproxy = scaleproxy->next) != scale_p->scale);
 
-    images->note_count = idx;
+	images->note_count = idx;
 
 	return images;
 }
@@ -155,8 +153,7 @@ struct imagelayers_t *getimages(struct scale_t *scale_p,
  * signal receives a ready-to-be-used cairo_t that is already
  * clipped to only draw the exposed areas of the widget
  */
-static gboolean on_draw_event(GtkWidget *widget,
-                              cairo_t *cr,
+static gboolean on_draw_event(GtkWidget *widget, cairo_t *cr,
 							  gpointer fn_parameter)
 {
 	struct imagelayers_t *layers = fn_parameter;
@@ -164,7 +161,6 @@ static gboolean on_draw_event(GtkWidget *widget,
 	cairo_set_source_surface(cr, layers->instrument, 0, 0);
 	cairo_paint(cr);
 
-    printf("note_count = %i\n", layers->note_count);
 	for (int i = 0; i < layers->note_count; ++i) {
 		cairo_set_source_surface(cr, layers->notes[i], 0, 0);
 		cairo_paint(cr);
