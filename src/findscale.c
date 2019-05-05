@@ -4,7 +4,6 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <ctype.h>
-
 #include <assert.h>
 
 #include "CircularLinkedList.h"
@@ -29,10 +28,10 @@ struct database_t {
 
 struct database_t *build_database(FILE *);
 
-struct imagelayers_t *getimages(struct scale_t *scale, char *instrument_name,
-								char *keysig);
+struct imagelayers_t *getimages(struct scale_t *, char *, char *);
 
 static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
+
 char *fgetline(FILE *stream);
 
 int main(int argc, char *argv[])
@@ -46,24 +45,22 @@ int main(int argc, char *argv[])
 	// Create draw area.
 	GtkWidget *draw_area = gtk_drawing_area_new();
 	gtk_container_add(GTK_CONTAINER(window), draw_area);
-
-	// Import list of scales
+	// Import list of scales.
 	FILE *configfp = fopen("conf/scale.list", "r");
-	struct database_t *scaledatabase = build_database(configfp);
-
-	// print results of import
-	for (int i = 0; i < scaledatabase->size; ++i) {
-		circularlist_traverse(scaledatabase->entry[i]->scale,
+	struct database_t *scale_database = build_database(configfp);
+	// print results of import.
+	for (int i = 0; i < scale_database->size; ++i) {
+		circularlist_traverse(scale_database->entry[i]->scale,
 							  circularlist_print);
 	}
-
+    // Get the images associated with database entry 0.
 	struct imagelayers_t *displaylayers =
-		getimages(scaledatabase->entry[0], argv[1], argv[2]);
-
+		getimages(scale_database->entry[0], argv[1], argv[2]);
+    // Draw the image layers just received which correspond to database entry 0.
 	g_signal_connect(G_OBJECT(draw_area), "draw", *G_CALLBACK(on_draw_event),
 					 (gpointer)displaylayers);
 
-	/* ------------------------------------------------------------------ */
+	/* Begin running of program.----------------------------------------- */
 	gtk_widget_show_all(window);
 	gtk_main();
 	return 0;
