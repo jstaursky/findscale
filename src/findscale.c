@@ -1,43 +1,41 @@
 #include <cairo.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <gtk/gtk.h>
 #include <string.h>
-#include "list.h"
+#include <ctype.h>
 
-struct imagelayers {
-	cairo_surface_t *instrument;
-	cairo_surface_t *notes[12];
-        unsigned int count;
+#include <assert.h>
+
+#include "CircularLinkedList.h"
+#include "gtk/gtkwidget.h"
+
+struct scale_t {
+	char *name;
+	struct node_t *scale;
+	int num_notes;
 };
 
-typedef struct scale_t {
-	char *name;
-	node_t *intervals;
-} scale_t;
+struct imagelayers_t {
+	cairo_surface_t *instrument;
+	cairo_surface_t *notes[12]; // chromaticscale is largest scale.
+	int note_count;
+};
 
-#define SCALE_NAME(node) (*((scale_t *)DATA(node))).name
-#define SCALE(node) (*((scale_t *)DATA(node))).intervals
+struct database_t {
+	struct scale_t **entry;
+	int size;
+};
 
-char *chromaticscale[] = {"Ab", "A",  "Bb", "B", "C",  "Db",
-                          "D",  "Eb", "E",  "F", "Gb", "G"};
+struct database_t *build_database(FILE *);
 
-enum { Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G };
+struct imagelayers_t *getimages(struct scale_t *scale, char *instrument_name,
+								char *keysig);
 
-char*
-fgetline(FILE *stream);
+static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
+char *fgetline(FILE *stream);
 
-struct imagelayers*
-getinstrumentlayers(char   *instru_choice,
-                    int     key,
-                    node_t *intervals);
-
-static gboolean
-on_draw_event(GtkWidget *widget,
-              cairo_t   *cr,
-              gpointer   user_data);
-
-
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	// Create window, set position, title, etc.
 	gtk_init(&argc, &argv);
@@ -45,69 +43,141 @@ main(int argc, char *argv[])
 	gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 	gtk_window_set_default_size(GTK_WINDOW(window), 300, 220);
 	gtk_window_set_title(GTK_WINDOW(window), "Findscale");
-	/* ------------------------------------------------------------------ */
+	// Create draw area.
 	GtkWidget *draw_area = gtk_drawing_area_new();
 	gtk_container_add(GTK_CONTAINER(window), draw_area);
 
-	// Import list of scales.
+	// Import list of scales
 	FILE *configfp = fopen("conf/scale.list", "r");
-	// Create initial node of scale listing.
-	node_t *scalelist_h = list_createnode(NULL);
+	struct database_t *scaledatabase = build_database(configfp);
 
-	for (char *line; line = fgetline(configfp);) {
-		scale_t *scale = malloc(sizeof(scale_t));
-		scale->intervals = list_createnode(NULL);
-		scale->name = strtok(line, ",\t");
-
-		char *noteinterval = strtok(strtok(NULL, ",\040\t"), "-");
-		while (noteinterval != NULL) {
-			// Two digits + null is maximum string size
-			char *note = malloc(sizeof(char) * 3);
-			strcpy(note, noteinterval);
-			if (!DATA(scale->intervals)) {
-				DATA(scale->intervals) = note;
-			} else {
-				list_prepend(scale->intervals, note);
-			}
-			noteinterval = strtok(NULL, "-");
-		}
-
-		if (!DATA(scalelist_h)) {
-			DATA(scalelist_h) = scale;
-		} else {
-			list_prepend(scalelist_h, scale);
-		}
-	}
-	// Import complete, access scales through scalelist_h;
-
-	node_t *tmp = SCALE(scalelist_h);
-	int count = 0;          // count the number of notes in scale.
-	while (++count, (tmp = NEXT(tmp)) != SCALE(scalelist_h)) {
-                puts(DATA(tmp));
+	// print results of import
+	for (int i = 0; i < scaledatabase->size; ++i) {
+		circularlist_traverse(scaledatabase->entry[i]->scale,
+							  circularlist_print);
 	}
 
+	struct imagelayers_t *displaylayers =
+	    getimages(scaledatabase->entry[0], argv[1], argv[2]);
 
-        int k = 0;
-        while (strcmp(argv[2], chromaticscale[k]) != 0) {
-                ++k;
-        }
-
-	// Must provide instrument of choice as cmdline argument.
-	struct imagelayers *images =
-		getinstrumentlayers(argv[1], k, SCALE(scalelist_h));
-
-	g_signal_connect(G_OBJECT(draw_area), "draw", G_CALLBACK(on_draw_event),
-			 (gpointer)images);
+	g_signal_connect(G_OBJECT(draw_area), "draw", *G_CALLBACK(on_draw_event),
+					 (gpointer)displaylayers);
 
 	/* ------------------------------------------------------------------ */
 	gtk_widget_show_all(window);
 	gtk_main();
 	return 0;
+}
 
-} /* main */
+struct database_t *build_database(FILE *fp)
+{
+	struct database_t *db = malloc(sizeof(struct database_t));
+	db->entry = NULL;
 
-char*
-fgetline(FILE *stream)
+	int db_idx = 0;
+	for (char *line; (line = fgetline(fp)); ++db_idx) {
+		db->entry = realloc(db->entry, sizeof(struct scale_t *) * (db_idx + 1));
+		db->entry[db_idx] = malloc(sizeof(struct scale_t));
+		db->entry[db_idx]->scale = circularlist_create();
+
+		char *rest = line;
+		db->entry[db_idx]->name = strtok_r(line, ",", &rest);
+		while (isspace(*rest))
+			++rest;
+
+		char *interval;
+		int note_count = 0;
+		while ((interval = strtok_r(NULL, "-", &rest))) {
+			circularlist_insert(&db->entry[db_idx]->scale, interval);
+			++note_count;
+		}
+		db->entry[db_idx]->num_notes = note_count;
+	}
+	db->size = db_idx;
+
+	return db;
+}
+
+// getimages returns an array holding the images relating to contents found in
+// scale.
+struct imagelayers_t *getimages(struct scale_t *scale_p,
+                                char *instrument_name,
+								char *keysig)
+{
+	static char *chromaticscale[] = { "Ab", "A",  "Bb", "B", "C",  "Db",
+									  "D",  "Eb", "E",  "F", "Gb", "G" };
+	// TODO need to make keys selectable from menu, or something more elegant
+	// than this.
+	int key = 0;
+	while (strcmp(keysig, chromaticscale[key]) != 0) {
+		++key;
+	}
+
+	struct imagelayers_t *images = malloc(sizeof(struct imagelayers_t));
+
+	char *instru_loc =
+		malloc(sizeof(char) * (strlen("imgs/") + strlen(instrument_name) +
+							   strlen(".png")));
+	sprintf(instru_loc, "imgs/%s.png", instrument_name);
+
+	images->instrument = cairo_image_surface_create_from_png(instru_loc);
+    cairo_surface_reference(images->instrument);
+
+	int idx = 0;
+	struct node_t *scaleproxy = scale_p->scale;
+
+	do {
+        printf("%d <= idx value\n", idx);
+		int note = key + atoi(scaleproxy->data);
+        note %= 12;
+		char *note_loc =
+			malloc(sizeof(char) * (strlen("imgs/") + strlen(instrument_name) +
+								   strlen("-") + strlen(chromaticscale[note]) +
+								   strlen("-notes.png")) +
+				   1);
+
+		sprintf(note_loc, "imgs/%s-%s-notes.png", instrument_name,
+				chromaticscale[note]);
+
+		images->notes[idx] = cairo_image_surface_create_from_png(note_loc);
+        cairo_surface_reference(images->notes[idx]);
+
+		++idx;
+	} while ((scaleproxy = scaleproxy->next) != scale_p->scale);
+
+    images->note_count = idx;
+
+	return images;
+}
+
+/*
+ * Redraw the screen from the surface. Note that the ::draw
+ * signal receives a ready-to-be-used cairo_t that is already
+ * clipped to only draw the exposed areas of the widget
+ */
+static gboolean on_draw_event(GtkWidget *widget,
+                              cairo_t *cr,
+							  gpointer fn_parameter)
+{
+	struct imagelayers_t *layers = fn_parameter;
+
+	cairo_set_source_surface(cr, layers->instrument, 0, 0);
+	cairo_paint(cr);
+
+    printf("note_count = %i\n", layers->note_count);
+	for (int i = 0; i < layers->note_count; ++i) {
+		cairo_set_source_surface(cr, layers->notes[i], 0, 0);
+		cairo_paint(cr);
+	}
+
+	gtk_widget_set_size_request(
+		widget, cairo_image_surface_get_width(layers->instrument),
+		cairo_image_surface_get_height(layers->instrument));
+
+	return FALSE;
+}
+
+char *fgetline(FILE *stream)
 {
 	const size_t chunk = 128;
 	size_t max = chunk;
@@ -141,72 +211,4 @@ fgetline(FILE *stream)
 	}
 	*ptr = '\0';
 	return buffer;
-}
-
-struct imagelayers*
-getinstrumentlayers(char   *instru_choice,
-                    int     key,
-                    node_t *intervals)
-{
-
-	struct imagelayers *images = malloc(sizeof(struct imagelayers));
-
-	// instrument image layer located in imgs/<instrument>.png
-	char *instru_loc = malloc(
-		sizeof(char)
-		* (strlen("imgs/") + strlen(instru_choice) + strlen(".png")));
-
-	sprintf(instru_loc, "imgs/%s.png", instru_choice);
-	images->instrument = cairo_image_surface_create_from_png(instru_loc);
-
-        unsigned int cnt = 0;
-	node_t *tmp = intervals;
-	while ((tmp = NEXT(tmp)) != intervals) {
-		int note = key + atoi(DATA(tmp));
-		if (note >= 12) {
-			note -= 12;
-		}
-		char *note_loc = malloc(
-			sizeof(char)
-				* (strlen("imgs/") + strlen(instru_choice)
-				   + strlen("-") + strlen(chromaticscale[note])
-				   + strlen("-notes.png"))
-			+ 1);
-
-		sprintf(note_loc, "imgs/%s-%s-notes.png", instru_choice,
-			chromaticscale[note]);
-
-		images->notes[cnt] =
-			cairo_image_surface_create_from_png(note_loc);
-                ++cnt;
-	}
-        images->count = cnt;
-        printf("%d\n", cnt);
-	return images;
-}
-
-/*
- * Redraw the screen from the surface. Note that the ::draw
- * signal receives a ready-to-be-used cairo_t that is already
- * clipped to only draw the exposed areas of the widget
- */
-static gboolean on_draw_event(GtkWidget *widget,
-                              cairo_t   *cr,
-                              gpointer   user_data)
-{
-	struct imagelayers *temp = user_data;
-
-	cairo_set_source_surface(cr, temp->instrument, 0, 0);
-	cairo_paint(cr);
-
-	for (int i = 0; i < temp->count; ++i) {
-		cairo_set_source_surface(cr, temp->notes[i], 0, 0);
-		cairo_paint(cr);
-	}
-
-	gtk_widget_set_size_request(
-		widget, cairo_image_surface_get_width(temp->instrument),
-		cairo_image_surface_get_height(temp->instrument));
-
-	return FALSE;
 }
