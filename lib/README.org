@@ -1,1 +1,1 @@
-* This is the directory for storing object files.
+* This directory is for storing object files.
