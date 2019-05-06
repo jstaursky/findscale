@@ -42,13 +42,16 @@ int main(int argc, char *argv[])
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 300, 220);
     gtk_window_set_title(GTK_WINDOW(window), "Findscale");
+    
     // Create draw area.
     GtkWidget *draw_area = gtk_drawing_area_new();
     gtk_container_add(GTK_CONTAINER(window), draw_area);
+    
     // Import list of scales.
     FILE *configfp = fopen("conf/scale.list", "r");
     struct database_t *scale_database = build_database(configfp);
-    // print results of import.
+    
+    // Print results of import.
     for (int i = 0; i < scale_database->size; ++i) {
         circularlist_traverse(scale_database->entry[i]->scale,
                               circularlist_print);
@@ -56,11 +59,12 @@ int main(int argc, char *argv[])
     // Get the images associated with database entry 0.
     struct imagelayers_t *displaylayers =
         getimages(scale_database->entry[0], argv[1], argv[2]);
+    
     // Draw the image layers just received which correspond to database entry 0.
     g_signal_connect(G_OBJECT(draw_area), "draw", *G_CALLBACK(on_draw_event),
                      (gpointer)displaylayers);
 
-    /* Begin running of program.----------------------------------------- */
+    /* Begin running of GUI. ----------------------------------------- */
     gtk_widget_show_all(window);
     gtk_main();
     return 0;
