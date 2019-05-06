@@ -15,16 +15,17 @@ struct scale_t {
     int num_notes;
 };
 
+struct database_t {
+    struct scale_t **entry;
+    int size;
+};
+
 struct imagelayers_t {
     cairo_surface_t *instrument;
     cairo_surface_t *notes[12]; // chromaticscale is largest scale.
     int note_count;
 };
 
-struct database_t {
-    struct scale_t **entry;
-    int size;
-};
 
 struct database_t *build_database(FILE *);
 
@@ -33,6 +34,7 @@ struct imagelayers_t *getimages(struct scale_t *, char *, char *);
 static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
 
 char *fgetline(FILE *stream);
+
 
 int main(int argc, char *argv[])
 {
