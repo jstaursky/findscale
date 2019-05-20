@@ -26,15 +26,19 @@ struct imagelayers_t {
     int note_count;
 };
 
-
 struct database_t *build_database(FILE *);
 struct imagelayers_t *getimages(struct scale_t *, char *, char *);
 static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
+void selectbox_change(GtkWidget *, gpointer);
 char *fgetline(FILE *stream);
 
+char *chosen_instrument, *chosen_key;
 
 int main(int argc, char *argv[])
 {
+    chosen_key = argv[2];
+    chosen_instrument = argv[1];
+
     // Create window, set position, title, etc. reference
     // https://developer.gnome.org/gtk-tutorial/stable/c450.html for more info
     // on creating widgets.
@@ -69,15 +73,14 @@ int main(int argc, char *argv[])
     }
 #endif
     // Get the images associated with database entry 0.
-    struct imagelayers_t *displaylayers = getimages(scale_database->entry[0],
-                                                    argv[1], argv[2]);
+    struct imagelayers_t *displaylayers =
+        getimages(scale_database->entry[0], chosen_instrument, chosen_key);
 
     // Draw the image layers just received which correspond to database entry 0.
     // reference https://developer.gnome.org/gtk-tutorial/stable/x159.html for
     // more info on 'g_signal_connect'.
     g_signal_connect(G_OBJECT(draw_area), "draw",
-                     *G_CALLBACK(on_draw_event), (gpointer)displaylayers);
-
+                     G_CALLBACK(on_draw_event), (gpointer)displaylayers);
 
     // Create widget to choose scale from database.
     GtkWidget *list_box = gtk_combo_box_text_new();
@@ -87,6 +90,8 @@ int main(int argc, char *argv[])
                                        scale_database->entry[i]->name);
     }
 
+    g_signal_connect(GTK_COMBO_BOX_TEXT(list_box), "changed",
+                     G_CALLBACK(selectbox_change), (gpointer)scale_database);
 
     /* Begin running of GUI. ----------------------------------------- */
     gtk_widget_show_all(window);
@@ -94,7 +99,24 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+void selectbox_change(GtkWidget *widget, gpointer database)
+{
+    struct database_t *db = database;
+    char *selected_box_item =
+        gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 
+    int entry_num;
+    for (int i = 0; i < db->size; ++i) {
+        if (strcmp(db->entry[i]->name, selected_box_item) == 0) {
+            entry_num = i;
+            puts(selected_box_item);
+            break;
+        }
+    }
+
+    struct imagelayers_t *displaylayers =
+        getimages(db->entry[entry_num], chosen_instrument, chosen_key);
+}
 
 struct database_t *build_database(FILE *fp)
 {
@@ -182,7 +204,7 @@ struct imagelayers_t *getimages(struct scale_t *scale_p, char *instrument_name,
  * clipped to only draw the exposed areas of the widget
  */
 static gboolean on_draw_event(GtkWidget *widget, // Widget emitting a signal.
-                              cairo_t *cr,       // Signal being emitted.
+                              cairo_t *cr, // Signal argument.
                               gpointer fn_parameter)
 {
     struct imagelayers_t *layers = fn_parameter;
