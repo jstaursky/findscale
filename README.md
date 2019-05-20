@@ -10,10 +10,10 @@ Simple gtk-based application that will display any musical scale in any key on i
 
 - ~~finish scale overlaying by note. (mostly just need to finish overlays for black keys)~~ **DONE**
 - ~~implement method for inputting a custom scale.~~ **DONE**
+- ~~Clean up the closing process~~
 
-- Create widget to select different scales at a given key.
+- Create widget to select different scales at a given key. **IN PROGRESS** just need to attach signals for updating instrument graphics.
 - Create widget to make key note changable.
-- Clean up the closing process (not require `ctrl + c` to exit)
 - Clean up `free`ing of various memory structures.
   - Valgrind analysis
 
