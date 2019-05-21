@@ -12,7 +12,7 @@ Simple gtk-based application that will display any musical scale in any key on i
 - ~~implement method for inputting a custom scale.~~ **DONE**
 - ~~Clean up the closing process~~
 
-- Create widget to select different scales at a given key. **IN PROGRESS** just need to attach signals for updating instrument graphics.
+- ~~Create widget to select different scales at a given key.~~
 - Create widget to make key note changable.
 - Clean up `free`ing of various memory structures.
   - Valgrind analysis
