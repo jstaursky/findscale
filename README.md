@@ -14,6 +14,7 @@ Simple gtk-based application that will display any musical scale in any key on i
 
 - ~~Create widget to select different scales at a given key.~~ **DONE**
 - Create widget to make key note changable.
+- look into whether signal propogation needs handeling.
 - Clean up `free`ing of various memory structures.
   - Valgrind analysis
 
@@ -27,7 +28,7 @@ For example, running `./findscale piano Ab` will result in,
 
 ![Ab-major-scale](./examples/Ab-major-scale.png)
 
-__findscale__ will only display the 1st scale listed in the config file found at `findscale/src/conf/scale.list` (selectable scale widget to be added later). So, here we have the major scale in the key of A flat since the scale interval pattern corresponding to the major scale is listed first in `scale.list` and our cmdline argument for the key was `Ab`.
+__findscale__ displays scales listed in the config file found at `findscale/src/conf/scale.list`. So, here we have the major scale in the key of A flat since the scale interval pattern corresponding to the major scale is listed first in `scale.list` and our cmdline argument for the key was `Ab`.
 
 It should also be noted that the `<Key>` passed as an argument to findscale can only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
 
