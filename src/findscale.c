@@ -29,7 +29,7 @@ struct imagelayers_t {
 struct database_t *build_database(FILE *);
 struct imagelayers_t *getimages(struct scale_t *, char *, char *);
 static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
-void selectbox_change(GtkWidget *, gpointer);
+void selectbox_change(GtkWidget *, gpointer *);
 char *fgetline(FILE *stream);
 
 char *chosen_instrument, *chosen_key;
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_container_add(GTK_CONTAINER(window), box);
 
-    // Create draw area.
+    // Create draw area and make it the leftmost panel of the pack box.
     // reference https://developer.gnome.org/gtk3/stable/GtkDrawingArea.html for
     // more info on gtk_drawing_area_new()
     GtkWidget *draw_area = gtk_drawing_area_new();
@@ -72,15 +72,6 @@ int main(int argc, char *argv[])
                               circularlist_print);
     }
 #endif
-    // Get the images associated with database entry 0.
-    struct imagelayers_t *displaylayers =
-        getimages(scale_database->entry[0], chosen_instrument, chosen_key);
-
-    // Draw the image layers just received which correspond to database entry 0.
-    // reference https://developer.gnome.org/gtk-tutorial/stable/x159.html for
-    // more info on 'g_signal_connect'.
-    g_signal_connect(G_OBJECT(draw_area), "draw",
-                     G_CALLBACK(on_draw_event), (gpointer)displaylayers);
 
     // Create widget to choose scale from database.
     GtkWidget *list_box = gtk_combo_box_text_new();
@@ -90,8 +81,10 @@ int main(int argc, char *argv[])
                                        scale_database->entry[i]->name);
     }
 
+    // Handle selection text box change signal.
     g_signal_connect(GTK_COMBO_BOX_TEXT(list_box), "changed",
-                     G_CALLBACK(selectbox_change), (gpointer)scale_database);
+                     G_CALLBACK(selectbox_change),
+                     ((gpointer[]){scale_database, draw_area}));
 
     /* Begin running of GUI. ----------------------------------------- */
     gtk_widget_show_all(window);
@@ -99,9 +92,11 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void selectbox_change(GtkWidget *widget, gpointer database)
+void selectbox_change(GtkWidget *widget, gpointer data[])
 {
-    struct database_t *db = database;
+    struct database_t *db = data[0];
+    GtkWidget *draw_area = data[1];
+
     char *selected_box_item =
         gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
 
@@ -109,13 +104,17 @@ void selectbox_change(GtkWidget *widget, gpointer database)
     for (int i = 0; i < db->size; ++i) {
         if (strcmp(db->entry[i]->name, selected_box_item) == 0) {
             entry_num = i;
-            puts(selected_box_item);
             break;
         }
     }
 
     struct imagelayers_t *displaylayers =
         getimages(db->entry[entry_num], chosen_instrument, chosen_key);
+
+    g_signal_connect(G_OBJECT(draw_area), "draw", G_CALLBACK(on_draw_event),
+                     (gpointer)displaylayers);
+
+    gtk_widget_queue_draw(draw_area);
 }
 
 struct database_t *build_database(FILE *fp)
