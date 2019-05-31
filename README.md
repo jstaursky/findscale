@@ -55,7 +55,7 @@ the case. Luckily, there is another tool to fixup `compile_commands.json`.
 [compdb](https://github.com/Sarcasm/compdb) tool.
 Use `compdb` to process the initial `compile_commands.json` produced by 
 `compiledb` and you will end up with a `compile_commands.json` suitable for 
-parsing by [ccls][https://github.com/MaskRay/ccls]
+parsing by [ccls](https://github.com/MaskRay/ccls)
 just run;
 ```
 compdb -p . list > tmp && mv tmp compile_commands.json
@@ -72,6 +72,7 @@ I use `ccls` on ubuntu and have the following in my `.ccls` file:
 %c -I/usr/lib/gcc/x86_64-linux-gnu/7/include
 ```
 
-The include line `%c -I/usr/lib/gcc/x86_64-linux-gnu/7/include` is needed for `ccls` to find some of the libc headers (I was getting errors telling me `size_t` was an invalid type).
-To find the appropriate `-I` for your system if you run into such errors is
-`gcc --print-file-name=include`.
+The include line `%c -I/usr/lib/gcc/x86_64-linux-gnu/7/include` is needed for
+`ccls` to find some of the libc headers (I was getting errors telling me 
+`size_t` was an invalid type). To find the appropriate `-I` for your system if
+you run into such errors is `gcc --print-file-name=include`.
