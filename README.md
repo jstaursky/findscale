@@ -28,17 +28,40 @@ For example, running `./findscale piano Ab` will result in,
 
 ![Ab-major-scale](./examples/Ab-major-scale.png)
 
-__findscale__ displays scales listed in the config file found at `findscale/src/conf/scale.list`. So, here we have the major scale in the key of A flat since the scale interval pattern corresponding to the major scale is listed first in `scale.list` and our cmdline argument for the key was `Ab`.
+__findscale__ displays scales listed in the config file found at
+`findscale/src/conf/scale.list`. So, here we have the major scale in the key of
+A flat since the scale interval pattern corresponding to the major scale is
+listed first in `scale.list` and our cmdline argument for the key was `Ab`.
 
-It should also be noted that the `<Key>` passed as an argument to findscale can only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
+It should also be noted that the `<Key>` passed as an argument to findscale can
+only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
 
 ## Tools
-This section is more for my own reference, but maybe someone else may find it useful too.
+This section is more for my own reference, but maybe others will find it useful
+too.
 
-To generate a compilation database suitable for use with editor tools such as ccls, irony-mode, etc.
+To generate a compilation database suitable for use with editor tools such as 
+ccls, irony-mode, etc.
 
-Goto the `findscale/` directory, use https://github.com/nickdiego/compiledb tool, and follow this up with https://github.com/Sarcasm/compdb.
-and you will end up with a `compile_commands.json` suitable for parsing by your favorite tool.
+Goto the `findscale/` directory, use 
+[compiledb][https://github.com/nickdiego/compiledb] tool; run
+```
+compiledb make
+```
+This will create an initial `compile_commands.json` which, for some tools may be 
+enough and no further work may be necessary. However I haven't found this to be
+the case. Luckily, there is another tool to fixup `compile_commands.json`.
+
+[compdb][https://github.com/Sarcasm/compdb] tool.
+Use `compdb` to process the initial `compile_commands.json` produced by 
+`compiledb` and you will end up with a `compile_commands.json` suitable for 
+parsing by [ccls][https://github.com/MaskRay/ccls]
+just run;
+```
+compdb -p . list > tmp && mv tmp compile_commands.json
+```
+
+Using `ccls` on ubuntu...
 
 I use `ccls` on ubuntu and have the following in my `.ccls` file:
 
