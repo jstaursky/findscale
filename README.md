@@ -44,7 +44,7 @@ To generate a compilation database suitable for use with editor tools such as
 ccls, irony-mode, etc.
 
 Goto the `findscale/` directory, use 
-[compiledb][https://github.com/nickdiego/compiledb] tool; run
+[compiledb](https://github.com/nickdiego/compiledb) tool; run
 ```
 compiledb make
 ```
@@ -52,7 +52,7 @@ This will create an initial `compile_commands.json` which, for some tools may be
 enough and no further work may be necessary. However I haven't found this to be
 the case. Luckily, there is another tool to fixup `compile_commands.json`.
 
-[compdb][https://github.com/Sarcasm/compdb] tool.
+[compdb](https://github.com/Sarcasm/compdb) tool.
 Use `compdb` to process the initial `compile_commands.json` produced by 
 `compiledb` and you will end up with a `compile_commands.json` suitable for 
 parsing by [ccls][https://github.com/MaskRay/ccls]
