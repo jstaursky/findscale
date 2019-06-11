@@ -4,7 +4,6 @@
 #include <gtk/gtk.h>
 #include <string.h>
 #include <ctype.h>
-#include <assert.h>
 
 #include "CircularLinkedList.h"
 #include "gtk/gtkwidget.h"
@@ -25,72 +24,8 @@ struct imagelayers_t {
     cairo_surface_t *notes[12]; // chromaticscale is largest scale.
     int note_count;
 };
-
-struct database_t *build_database(FILE *);
-struct imagelayers_t *getimages(struct scale_t *, char *, char *);
-static gboolean on_draw_event(GtkWidget *, cairo_t *, gpointer fn_parameter);
-void selectbox_change(GtkWidget *, gpointer *);
-char *fgetline(FILE *stream);
-
+// Global Vars
 char *chosen_instrument, *chosen_key;
-
-int main(int argc, char *argv[])
-{
-    chosen_key = argv[2];
-    chosen_instrument = argv[1];
-
-    // Create window, set position, title, etc. reference
-    // https://developer.gnome.org/gtk-tutorial/stable/c450.html for more info
-    // on creating widgets.
-    gtk_init(&argc, &argv);
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 220);
-    gtk_window_set_title(GTK_WINDOW(window), "Findscale");
-    // Handle exit signal.
-    g_signal_connect(G_OBJECT(window), "destroy",
-                     G_CALLBACK(gtk_main_quit), NULL);
-
-    // Create container for packing widgets in a single row.
-    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    gtk_container_add(GTK_CONTAINER(window), box);
-
-    // Create draw area and make it the leftmost panel of the pack box.
-    // reference https://developer.gnome.org/gtk3/stable/GtkDrawingArea.html for
-    // more info on gtk_drawing_area_new()
-    GtkWidget *draw_area = gtk_drawing_area_new();
-    gtk_box_pack_start(GTK_BOX(box), draw_area, TRUE, TRUE, 10);
-
-    // Import list of scales.
-    FILE *configfp = fopen("conf/scale.list", "r");
-    struct database_t *scale_database = build_database(configfp);
-
-#ifdef DEBUG_CHECK
-    // Print results of import.
-    for (int i = 0; i < scale_database->size; ++i) {
-        circularlist_traverse(scale_database->entry[i]->scale,
-                              circularlist_print);
-    }
-#endif
-
-    // Create widget to choose scale from database.
-    GtkWidget *list_box = gtk_combo_box_text_new();
-    gtk_box_pack_start(GTK_BOX(box), list_box, FALSE, TRUE, 0);
-    for (int i = 0; i < scale_database->size; ++i) {
-        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(list_box),
-                                       scale_database->entry[i]->name);
-    }
-
-    // Handle selection text box change signal.
-    g_signal_connect(GTK_COMBO_BOX_TEXT(list_box), "changed",
-                     G_CALLBACK(selectbox_change),
-                     ((gpointer[]){scale_database, draw_area}));
-
-    /* Begin running of GUI. ----------------------------------------- */
-    gtk_widget_show_all(window);
-    gtk_main();
-    return 0;
-}
 
 void selectbox_change(GtkWidget *widget, gpointer data[])
 {
@@ -196,14 +131,8 @@ struct imagelayers_t *getimages(struct scale_t *scale_p, char *instrument_name,
     return images;
 }
 
-/*
- * Callback function used with g_signal_connect().
- * Redraw the screen from the surface. Note that the ::draw
- * signal receives a ready-to-be-used cairo_t that is already
- * clipped to only draw the exposed areas of the widget
- */
-static gboolean on_draw_event(GtkWidget *widget, // Widget emitting a signal.
-                              cairo_t *cr, // Signal argument.
+static gboolean on_draw_event(GtkWidget *widget,
+                              cairo_t *cr,
                               gpointer fn_parameter)
 {
     struct imagelayers_t *layers = fn_parameter;
@@ -219,6 +148,11 @@ static gboolean on_draw_event(GtkWidget *widget, // Widget emitting a signal.
     gtk_widget_set_size_request(
         widget, cairo_image_surface_get_width(layers->instrument),
         cairo_image_surface_get_height(layers->instrument));
+
+    // WORK IN PROGRESS
+    GdkPixbuf *pixbuf = gdk_pixbuf_get_from_surface(cairo_get_target(cr), 
+
+        );
 
     return FALSE;
 }
@@ -244,6 +178,7 @@ char *fgetline(FILE *stream)
         ++ptr;
         size_t offset = ptr - buffer;
         if (offset >= max) {
+
             max += chunk;
 
             char *tmp = realloc(buffer, max);
@@ -257,4 +192,65 @@ char *fgetline(FILE *stream)
     }
     *ptr = '\0';
     return buffer;
+}
+
+
+int main(int argc, char *argv[])
+{
+    chosen_key        = argv[2];
+    chosen_instrument = argv[1];
+
+    GtkWidget *window    = NULL;
+    GtkWidget *box       = NULL;
+    GtkWidget *draw_area = NULL;
+
+    gtk_init(&argc, &argv);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+    gtk_window_set_default_size(GTK_WINDOW(window), 300, 220);
+    gtk_window_set_title(GTK_WINDOW(window), "Findscale");
+
+    box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_container_add(GTK_CONTAINER(window), box);
+
+    draw_area = gtk_drawing_area_new();
+    gtk_box_pack_start(GTK_BOX(box), draw_area, TRUE, TRUE, 10);
+
+    FILE              *configfp       = NULL;
+    struct database_t *scale_database = NULL;
+    GtkWidget         *list_box       = NULL;
+
+    // Import list of scales.
+    configfp = fopen("conf/scale.list", "r");
+    scale_database = build_database(configfp);
+
+    // Create a scale selector box.
+    list_box = gtk_combo_box_text_new();
+    gtk_box_pack_start(GTK_BOX(box), list_box, FALSE, TRUE, 0);
+
+    // Populate selector box (combo box)
+    for (int i = 0; i < scale_database->size; ++i) {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(list_box),
+                                       scale_database->entry[i]->name);
+    }
+
+    // Handle selection text box change signal.
+    g_signal_connect(GTK_COMBO_BOX_TEXT(list_box), "changed",
+                     G_CALLBACK(selectbox_change),
+                     ((gpointer[]){ scale_database, draw_area }) );
+    // Handle application closing signal.
+    g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(gtk_main_quit),
+                     NULL);
+
+
+
+
+    g_signal_connect(G_OBJECT(box), "size-allocate", G_CALLBACK(resize_image), widgets);
+
+    /* Begin running of GUI. ----------------------------------------- */
+    gtk_widget_show_all(window);
+    gtk_main();
+    return 0;
 }
