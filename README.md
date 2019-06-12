@@ -2,7 +2,7 @@
 
 Simple gtk-based application that will display any musical scale in any key on instrument(s). I find this useful for improvising over a chord progression in some key I am unfamiliar with. Initially the only instrument will be piano, but will eventually add guitar and maybe some others.
 
-![piano](./src/imgs/piano.png ) 
+![piano](./src/examples/program_pic.png ) 
 
 - using gtk + cairo
 
@@ -13,30 +13,22 @@ Simple gtk-based application that will display any musical scale in any key on i
 - ~~Clean up the closing process~~ **DONE**
 
 - ~~Create widget to select different scales at a given key.~~ **DONE**
-- Create widget to make key note changable.
-- look into whether signal propogation needs handeling.
+- ~~Create widget to make key note changable.~~ **DONE**
 - Clean up `free`ing of various memory structures.
   - Valgrind analysis
-
+  
+## To Build ##
+```
+cd findscale/src/ && gcc -o findscale findscale.c `pkg-config --cflags --libs gtk+-3.0`
+```
 ## Usage ##
-
-Currently must run the program as follows
+goto findscale/src run
 ```
-./findscale piano <Key>
+./findscale
 ```
-For example, running `./findscale piano Ab` will result in,
+and enjoy, coming weeks or so will get around to making it so you do not need to open terminal in order to run it, as well as an make install script. But first need to do some code clean up.
 
-![Ab-major-scale](./examples/Ab-major-scale.png)
-
-__findscale__ displays scales listed in the config file found at
-`findscale/src/conf/scale.list`. So, here we have the major scale in the key of
-A flat since the scale interval pattern corresponding to the major scale is
-listed first in `scale.list` and our cmdline argument for the key was `Ab`.
-
-It should also be noted that the `<Key>` passed as an argument to findscale can
-only be one of the following. `Ab, A, Bb, B, C, Db, D, Eb, E, F, Gb, G`.
-
-## Tools
+## Tools - NO LONGER RELEVANT
 This section is more for my own reference, but maybe others will find it useful
 too.
 
