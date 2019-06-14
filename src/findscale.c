@@ -6,7 +6,6 @@
 #include <string.h>
 #include <ctype.h>
 
-// gcc -o find_s find_s.c `pkg-config --cflags --libs gtk+-3.0`
 static char *chromaticscale[] = { "Ab", "A",  "Bb", "B", "C",  "Db",
                                   "D",  "Eb", "E",  "F", "Gb", "G" };
 
@@ -19,7 +18,9 @@ static gboolean drawArea_draw (GtkWidget *widget, cairo_t *cr,
 
     window = gtk_widget_get_window (widget);
     height = gdk_window_get_height (window);
+  
     // Calculate width such that aspect ratio is retained during rescale.
+    //
     width = (gdk_pixbuf_get_width (pixbuf) * height) /
             gdk_pixbuf_get_height (pixbuf);
 
@@ -34,7 +35,14 @@ static gboolean drawArea_draw (GtkWidget *widget, cairo_t *cr,
     return FALSE;
 }
 
-int getNoteValue (char *note);
+int getNoteValue (char *note)
+{
+    int key = 0;
+    while (strcmp (note, chromaticscale[key]) != 0) {
+        ++key;
+    }
+    return key;
+}
 
 int getNoteCount (gchar *intervals)
 {
@@ -92,20 +100,19 @@ void configurePixbufRender (GdkPixbuf **pixbuf, gchar *keysig, gchar *intervals)
     gdk_cairo_set_source_pixbuf (cr, pianoPixbuf, 0, 0);
     cairo_paint (cr);
 
-    // will need to loop this
-
     gchar **layers = getResourceFileNames (keysig, intervals);
     int layercount = getNoteCount (intervals);
 
     for (int i = 0; i < layercount; ++i) {
-        printf ("INSIDE configurePixbufRender, layers[%d] is %s\n", i,
-                layers[i]);
-        paint_src = cairo_image_surface_create_from_png (
-            layers[i]); // e.g. "piano-A-notes.png"
+        paint_src = cairo_image_surface_create_from_png (layers[i]);
         free (layers[i]);
+      
         if (cairo_surface_status (paint_src) == CAIRO_STATUS_SUCCESS) {
+          
+            // write to paint_dest.
+            //
             cairo_set_source_surface (cr, paint_src, 0, 0);
-            cairo_paint (cr); // write to paint_dest.
+            cairo_paint (cr); 
         } else {
             puts ("paint_src error");
         }
@@ -115,9 +122,10 @@ void configurePixbufRender (GdkPixbuf **pixbuf, gchar *keysig, gchar *intervals)
     *pixbuf = gdk_pixbuf_get_from_surface (
         paint_dest, 0, 0, cairo_image_surface_get_width (paint_dest),
         cairo_image_surface_get_height (paint_dest));
+  
     // Clean up.
+    //
     cairo_surface_destroy (paint_src);
-
     cairo_destroy (cr);
 }
 
@@ -133,16 +141,12 @@ static void listBoxKey_change (GtkWidget *keyWidget, gpointer usr_arg[])
     gchar *key =
         gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (keyWidget));
 
-    puts (key);
-    int keyval = getNoteValue (key);
-    printf ("%d\n", keyval);
-
     // If there is nothing selected inside Scale name selectbox, do nothing.
+    //
     if (!scaleName) {
         return;
     }
     gchar *intervals = g_hash_table_lookup (table, scaleName);
-    puts (intervals);
 
     configurePixbufRender (pixbuf, key, intervals);
 
@@ -162,14 +166,13 @@ static void listBoxScale_change (GtkWidget *scaleWidget, gpointer usr_arg[])
         GTK_COMBO_BOX_TEXT (listBoxKeySignatures));
 
     gchar *intervals = g_hash_table_lookup (table, scaleName);
-    puts (intervals);
 
     configurePixbufRender (pixbuf, key, intervals);
 
     gtk_widget_queue_draw (draw_area);
 }
 
-char *fgetline (FILE *stream);
+
 
 void populateKeysigWidget (GtkWidget **widget)
 {
@@ -179,6 +182,15 @@ void populateKeysigWidget (GtkWidget **widget)
     }
 }
 
+// TODO: Replace fgetline with something simpler, no reason for such heavy duty io.
+//
+char *fgetline (FILE *stream);
+
+// MISC TODO: 
+// - Make variable naming more uniform.
+// - Maybe(Probably) able to get away with using 1 "change" signal handler instead of 
+//   using listBoxScale_change and listBoxKey_change.
+// - More code cleanup.
 int main (int argc, char **argv)
 {
     GtkWidget *window, *draw_area;
@@ -209,6 +221,8 @@ int main (int argc, char **argv)
 
     FILE *configfp = fopen ("conf/scale.list", "r");
 
+    // TODO: Move into separate function.
+    //
     for (char *line; (line = fgetline (configfp));) {
         char *name, *intervals;
         char *rest = line;
@@ -225,6 +239,9 @@ int main (int argc, char **argv)
     GHashTableIter iter;
     gpointer key, value;
     g_hash_table_iter_init (&iter, scaleDefTable);
+  
+    // TODO: Move into separate function.
+    //
     while (g_hash_table_iter_next (&iter, &key, &value)) {
         gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (scaleNameBox), key);
     }
@@ -273,14 +290,6 @@ int main (int argc, char **argv)
     return 0;
 }
 
-int getNoteValue (char *note)
-{
-    int key = 0;
-    while (strcmp (note, chromaticscale[key]) != 0) {
-        ++key;
-    }
-    return key;
-}
 
 char *fgetline (FILE *stream)
 {
