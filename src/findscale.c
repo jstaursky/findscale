@@ -2,7 +2,7 @@
 #include <cairo.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <glib.h>
-
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
