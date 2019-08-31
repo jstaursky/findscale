@@ -1,3 +1,5 @@
+UPDATE: Error on windows starting from ```gdk_pixbuf_new_from_file``` doesn't prevent compile but piano not displaying, linux build still builds fine. School has started so not sure when able to fix windows.
+
 # findscale #
 
 Simple gtk-based application that will display any musical scale in any key on instrument(s). I find this useful for improvising over a chord progression in some key I am unfamiliar with. Initially the only instrument will be piano, but will eventually add guitar and maybe some others.
